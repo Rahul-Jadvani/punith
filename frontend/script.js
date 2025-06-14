@@ -5,7 +5,7 @@ class TranslatorApp {
         this.isRecording = false;
         this.recognition = null;
         this.setupSpeechRecognition();
-        
+
         // Configure backend URL based on environment
         this.backendUrl = this.getBackendUrl();
     }
@@ -15,13 +15,11 @@ class TranslatorApp {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             return 'http://localhost:5000';
         }
-        // For production, use environment variable or deployed backend URL
-        // You can set this to your Render backend URL when deployed
-        return 'https://your-backend-url.onrender.com';
+        // For production, use deployed Render backend
+        return 'https://amma-backend-5z2j.onrender.com';
     }
 
     initializeElements() {
-        // Get DOM elements
         this.inputText = document.getElementById('inputText');
         this.voiceBtn = document.getElementById('voiceBtn');
         this.voiceBtnText = document.getElementById('voiceBtnText');
@@ -41,8 +39,7 @@ class TranslatorApp {
         this.voiceBtn.addEventListener('click', () => this.toggleVoiceInput());
         this.translateBtn.addEventListener('click', () => this.translateText());
         this.copyBtn.addEventListener('click', () => this.copyToClipboard());
-        
-        // Enable translate on Enter (Ctrl+Enter for new line)
+
         this.inputText.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
                 e.preventDefault();
@@ -52,37 +49,34 @@ class TranslatorApp {
     }
 
     setupSpeechRecognition() {
-        // Check if speech recognition is supported
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             this.recognition = new SpeechRecognition();
-            
-            // Configure recognition settings
+
             this.recognition.continuous = false;
             this.recognition.interimResults = false;
-            this.recognition.lang = 'kn-IN'; // Kannada (India)
-            
-            // Set up event handlers
+            this.recognition.lang = 'kn-IN';
+
             this.recognition.onstart = () => {
                 console.log('Speech recognition started');
                 this.isRecording = true;
                 this.updateVoiceButton();
             };
-            
+
             this.recognition.onresult = (event) => {
                 console.log('Speech recognition result:', event);
                 const result = event.results[0][0].transcript;
                 this.inputText.value = result;
                 console.log('Recognized text:', result);
             };
-            
+
             this.recognition.onerror = (event) => {
                 console.error('Speech recognition error:', event.error);
                 this.showError(`Voice input error: ${event.error}. Please try again.`);
                 this.isRecording = false;
                 this.updateVoiceButton();
             };
-            
+
             this.recognition.onend = () => {
                 console.log('Speech recognition ended');
                 this.isRecording = false;
@@ -130,7 +124,7 @@ class TranslatorApp {
 
     async translateText() {
         const text = this.inputText.value.trim();
-        
+
         if (!text) {
             this.showError('Please enter some text to translate, Amma.');
             return;
@@ -156,7 +150,7 @@ class TranslatorApp {
             }
 
             this.showResult(data);
-            
+
         } catch (error) {
             console.error('Translation error:', error);
             if (error.message.includes('Failed to fetch')) {
@@ -184,19 +178,15 @@ class TranslatorApp {
     showResult(data) {
         this.resultText.textContent = data.output;
         this.resultSection.classList.remove('hidden');
-        
-        // Show debug information if available
+
         if (data.detected_language || data.intermediate_translation) {
             let debugText = `Detected Language: ${data.detected_language}`;
             if (data.intermediate_translation) {
                 debugText += `\nIntermediate Translation: ${data.intermediate_translation}`;
             }
             this.debugContent.textContent = debugText;
-            // Uncomment the next line if you want to show debug info
-            // this.debugInfo.classList.remove('hidden');
         }
 
-        // Scroll to result
         this.resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -208,8 +198,6 @@ class TranslatorApp {
     showError(message) {
         this.errorText.textContent = message;
         this.errorSection.classList.remove('hidden');
-        
-        // Scroll to error
         this.errorSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -219,29 +207,26 @@ class TranslatorApp {
 
     async copyToClipboard() {
         const text = this.resultText.textContent;
-        
+
         try {
             await navigator.clipboard.writeText(text);
-            
-            // Provide visual feedback
             const originalText = this.copyBtn.innerHTML;
             this.copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i>✅ Copied!';
             this.copyBtn.classList.add('bg-opacity-40');
-            
+
             setTimeout(() => {
                 this.copyBtn.innerHTML = originalText;
                 this.copyBtn.classList.remove('bg-opacity-40');
             }, 2000);
-            
+
         } catch (error) {
             console.error('Copy failed:', error);
-            
-            // Fallback for older browsers
+
             const textArea = document.createElement('textarea');
             textArea.value = text;
             document.body.appendChild(textArea);
             textArea.select();
-            
+
             try {
                 document.execCommand('copy');
                 this.copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i>✅ Copied!';
@@ -251,19 +236,17 @@ class TranslatorApp {
             } catch (fallbackError) {
                 this.showError('Failed to copy text. Please select and copy manually.');
             }
-            
+
             document.body.removeChild(textArea);
         }
     }
 }
 
-// Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     const app = new TranslatorApp();
     console.log('Translator app initialized for NETHRA Amma');
 });
 
-// Add some helpful global functions for debugging
 window.testTranslation = async function(text) {
     console.log('Testing translation for:', text);
     try {
