@@ -44,11 +44,31 @@ def translate_kannada_to_english(text):
     Translate Kannada text to English using Google Translate
     """
     try:
+        # Handle both sync and async versions of googletrans
         result = translator.translate(text, src='kn', dest='en')
+        
+        # If result is a coroutine, we need to handle it differently
+        if hasattr(result, '__await__'):
+            # For async version, we'll use a different approach
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            result = loop.run_until_complete(result)
+            loop.close()
+        
         return result.text
     except Exception as e:
         logging.error(f"Translation error: {e}")
-        raise Exception(f"Failed to translate Kannada text: {str(e)}")
+        # Fallback: try to detect if it's actually English or try a simpler approach
+        try:
+            # Reinitialize translator and try again
+            from googletrans import Translator
+            temp_translator = Translator()
+            result = temp_translator.translate(text, src='kn', dest='en')
+            return result.text
+        except Exception as e2:
+            logging.error(f"Fallback translation also failed: {e2}")
+            raise Exception(f"Failed to translate Kannada text: {str(e)}")
 
 def improve_english_with_openai(text):
     """
@@ -72,10 +92,16 @@ def improve_english_with_openai(text):
             max_tokens=500,
             temperature=0.3
         )
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        return content.strip() if content else text
     except Exception as e:
         logging.error(f"OpenAI API error: {e}")
-        raise Exception(f"Failed to improve English text: {str(e)}")
+        
+        # Check if it's a quota error and provide helpful fallback
+        if "insufficient_quota" in str(e) or "quota" in str(e).lower():
+            return f"[OpenAI Quota Exceeded] Original text: {text}\n\nNote: Please add credits to your OpenAI account or get a new API key to enable grammar improvement. The translation from Kannada still works!"
+        else:
+            raise Exception(f"Failed to improve English text: {str(e)}")
 
 @app.route('/')
 def index():
