@@ -1,0 +1,13 @@
+{
+  "name": "nethra-amma-translator-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for NETHRA Amma's Kannada to English Translator",
+  "scripts": {
+    "dev": "python -m http.server 3000",
+    "serve": "python -m http.server 3000",
+    "build": "echo 'No build step needed - static files ready for deployment'"
+  },
+  "keywords": ["kannada", "translation", "voice", "accessibility"],
+  "author": "NETHRA",
+  "license": "MIT"
+}
