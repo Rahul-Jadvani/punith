@@ -3,7 +3,7 @@ import logging
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from googletrans import Translator
-from openai import OpenAI
+import cohere
 from dotenv import load_dotenv
 import re
 
@@ -20,7 +20,7 @@ CORS(app)
 
 # Initialize services
 translator = Translator()
-openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+cohere_client = cohere.Client(api_key=os.environ.get("COHERE_API_KEY"))
 
 def detect_language(text):
     """
@@ -70,38 +70,55 @@ def translate_kannada_to_english(text):
             logging.error(f"Fallback translation also failed: {e2}")
             raise Exception(f"Failed to translate Kannada text: {str(e)}")
 
-def improve_english_with_openai(text):
+def improve_english_with_cohere(text):
     """
-    Improve English text grammar and fluency using OpenAI
+    Improve English text grammar and fluency using Cohere
     """
     try:
-        # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-        # do not change this unless explicitly requested by the user
-        response = openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert English language editor. Your task is to take broken English, grammatically incorrect sentences, or roughly translated text and convert them into fluent, natural, grammatically correct English while preserving the original meaning. Make the output sound natural and conversational."
-                },
-                {
-                    "role": "user",
-                    "content": f"Please improve this English text to make it fluent and grammatically correct: {text}"
-                }
-            ],
-            max_tokens=500,
-            temperature=0.3
-        )
-        content = response.choices[0].message.content
-        return content.strip() if content else text
-    except Exception as e:
-        logging.error(f"OpenAI API error: {e}")
+        # Use Cohere's generate API for grammar correction with a cleaner prompt
+        prompt = f"Correct grammar and improve: {text}"
         
-        # Check if it's a quota error and provide helpful fallback
-        if "insufficient_quota" in str(e) or "quota" in str(e).lower():
-            return f"[OpenAI Quota Exceeded] Original text: {text}\n\nNote: Please add credits to your OpenAI account or get a new API key to enable grammar improvement. The translation from Kannada still works!"
+        response = cohere_client.generate(
+            prompt=prompt,
+            max_tokens=50,
+            temperature=0.2,
+            stop_sequences=["\n", ".", "!"]
+        )
+        
+        corrected_text = response.generations[0].text.strip()
+        
+        # Clean up the response - remove common prefixes
+        prefixes_to_remove = [
+            "Sure, here is the text rewritten",
+            "Here is the corrected text",
+            "Corrected text:",
+            "The corrected sentence is",
+            "Here's the improved version",
+            ":"
+        ]
+        
+        for prefix in prefixes_to_remove:
+            if corrected_text.lower().startswith(prefix.lower()):
+                corrected_text = corrected_text[len(prefix):].strip()
+                break
+        
+        # If the response is empty, too short, or contains unwanted text, return original
+        if (not corrected_text or 
+            len(corrected_text) < 3 or 
+            "here is" in corrected_text.lower() or
+            "corrected" in corrected_text.lower()):
+            return text
+            
+        return corrected_text
+        
+    except Exception as e:
+        logging.error(f"Cohere API error: {e}")
+        
+        # Check if it's an API key or quota error
+        if "unauthorized" in str(e).lower() or "api" in str(e).lower():
+            return f"[Cohere API Error] Original text: {text}\n\nNote: Please check your Cohere API key or account status. The translation from Kannada still works!"
         else:
-            raise Exception(f"Failed to improve English text: {str(e)}")
+            raise Exception(f"Failed to improve English text with Cohere: {str(e)}")
 
 @app.route('/')
 def index():
@@ -139,8 +156,8 @@ def translate():
             english_text = input_text
             logging.info("Using input as English text")
         
-        # Step 3: Improve English with OpenAI
-        improved_text = improve_english_with_openai(english_text)
+        # Step 3: Improve English with Cohere
+        improved_text = improve_english_with_cohere(english_text)
         logging.info(f"Improved text: {improved_text}")
         
         return jsonify({

@@ -13,4 +13,5 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "googletrans>=4.0.2",
     "python-dotenv>=1.1.0",
+    "cohere>=5.15.0",
 ]
