@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kannada to English Translator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for better accessibility and elder-friendly design */
+        .elder-friendly {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .large-button {
+            min-height: 60px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        
+        .voice-recording {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            animation: recording-pulse 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes recording-pulse {
+            from {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 107, 107, 0.7);
+            }
+            to {
+                transform: scale(1.05);
+                box-shadow: 0 0 30px rgba(255, 107, 107, 0.9);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg elder-friendly">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                <i class="fas fa-language mr-3"></i>
+                Kannada to English Helper
+            </h1>
+            <p class="text-xl text-white opacity-90">
+                Type or speak in Kannada or broken English - get perfect English back!
+            </p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8">
+            <!-- Input Section -->
+            <div class="mb-6">
+                <label for="inputText" class="block text-lg font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-edit mr-2 text-blue-600"></i>
+                    Enter your text (Kannada or broken English):
+                </label>
+                <textarea 
+                    id="inputText" 
+                    rows="6" 
+                    class="w-full p-4 text-lg border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300 resize-none"
+                    placeholder="Type here or use voice input... 
+Example: 'ನಾನು ಕನ್ನಡ ಮಾತನಾಡುತ್ತೇನೆ' or 'I am go to market tomorrow'"
+                ></textarea>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                <button 
+                    id="voiceBtn" 
+                    class="large-button flex-1 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-300 flex items-center justify-center"
+                >
+                    <i class="fas fa-microphone mr-3"></i>
+                    <span id="voiceBtnText">🎤 Voice Input</span>
+                </button>
+                
+                <button 
+                    id="translateBtn" 
+                    class="large-button flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-300 flex items-center justify-center"
+                >
+                    <i class="fas fa-language mr-3"></i>
+                    <span id="translateBtnText">🔄 Translate & Fix</span>
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loadingDiv" class="hidden text-center py-4">
+                <div class="inline-flex items-center">
+                    <div class="pulse-animation">
+                        <i class="fas fa-spinner fa-spin text-3xl text-blue-600 mr-3"></i>
+                    </div>
+                    <span class="text-lg text-gray-600">Processing your text...</span>
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div id="resultSection" class="hidden">
+                <label class="block text-lg font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-check-circle mr-2 text-green-600"></i>
+                    Fluent English Result:
+                </label>
+                <div class="result-box p-6 rounded-xl text-white relative">
+                    <div id="resultText" class="text-lg leading-relaxed mb-4"></div>
+                    <button 
+                        id="copyBtn" 
+                        class="absolute top-4 right-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center"
+                    >
+                        <i class="fas fa-copy mr-2"></i>
+                        📋 Copy
+                    </button>
+                </div>
+                
+                <!-- Debug Info (Optional) -->
+                <div id="debugInfo" class="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-600 hidden">
+                    <strong>Debug Information:</strong>
+                    <div id="debugContent"></div>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="errorSection" class="hidden">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-3"></i>
+                        <div>
+                            <strong>Error:</strong>
+                            <span id="errorText"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mt-8 bg-white bg-opacity-10 rounded-xl p-6 text-white">
+            <h3 class="text-xl font-semibold mb-4">
+                <i class="fas fa-info-circle mr-2"></i>
+                How to use:
+            </h3>
+            <ul class="space-y-2 text-lg">
+                <li><i class="fas fa-keyboard mr-3 text-yellow-300"></i>Type your text in Kannada or broken English</li>
+                <li><i class="fas fa-microphone mr-3 text-green-300"></i>Or click "Voice Input" to speak (works best with Kannada)</li>
+                <li><i class="fas fa-magic mr-3 text-purple-300"></i>Click "Translate & Fix" to get perfect English</li>
+                <li><i class="fas fa-copy mr-3 text-blue-300"></i>Use "Copy" button to copy the result</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
