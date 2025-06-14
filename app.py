@@ -75,38 +75,37 @@ def improve_english_with_cohere(text):
     Improve English text grammar and fluency using Cohere
     """
     try:
-        # Use Cohere's generate API for grammar correction with a cleaner prompt
-        prompt = f"Correct grammar and improve: {text}"
+        # Use a more direct prompt to avoid explanatory text
+        prompt = f"Fix grammar: {text}\nCorrected:"
         
         response = cohere_client.generate(
             prompt=prompt,
-            max_tokens=50,
-            temperature=0.2,
-            stop_sequences=["\n", ".", "!"]
+            max_tokens=60,
+            temperature=0.1,
+            stop_sequences=["\n", "Original", "This", "Note", "Explanation"]
         )
         
         corrected_text = response.generations[0].text.strip()
         
-        # Clean up the response - remove common prefixes
-        prefixes_to_remove = [
-            "Sure, here is the text rewritten",
-            "Here is the corrected text",
-            "Corrected text:",
-            "The corrected sentence is",
-            "Here's the improved version",
-            ":"
-        ]
+        # Clean up the response
+        if corrected_text.startswith('"') and corrected_text.endswith('"'):
+            corrected_text = corrected_text[1:-1].strip()
         
-        for prefix in prefixes_to_remove:
-            if corrected_text.lower().startswith(prefix.lower()):
-                corrected_text = corrected_text[len(prefix):].strip()
+        # Remove any remaining quotes or extra formatting
+        corrected_text = corrected_text.replace('"', '').replace("'", "'").strip()
+        
+        # Split on common separators and take first sentence
+        for separator in ["\n", ". ", "This", "Note:", "Explanation:"]:
+            if separator in corrected_text:
+                corrected_text = corrected_text.split(separator)[0].strip()
                 break
         
-        # If the response is empty, too short, or contains unwanted text, return original
+        # Validate response quality
         if (not corrected_text or 
             len(corrected_text) < 3 or 
-            "here is" in corrected_text.lower() or
-            "corrected" in corrected_text.lower()):
+            corrected_text.lower() == text.lower() or
+            len(corrected_text) > len(text) * 2):  # Avoid overly long responses
+            logging.warning(f"Cohere response not suitable: '{corrected_text}', using original")
             return text
             
         return corrected_text
@@ -115,7 +114,7 @@ def improve_english_with_cohere(text):
         logging.error(f"Cohere API error: {e}")
         
         # Check if it's an API key or quota error
-        if "unauthorized" in str(e).lower() or "api" in str(e).lower():
+        if "unauthorized" in str(e).lower() or "invalid" in str(e).lower():
             return f"[Cohere API Error] Original text: {text}\n\nNote: Please check your Cohere API key or account status. The translation from Kannada still works!"
         else:
             raise Exception(f"Failed to improve English text with Cohere: {str(e)}")

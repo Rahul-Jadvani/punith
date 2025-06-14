@@ -1,6 +1,6 @@
 # Kannada to English Translator
 
-A full-stack web application that translates Kannada or broken English into fluent, grammatically correct English using Google Translate and OpenAI GPT-4o.
+A full-stack web application that translates Kannada or broken English into fluent, grammatically correct English using Google Translate and Cohere's grammar correction API.
 
 ## Features
 
@@ -8,7 +8,7 @@ A full-stack web application that translates Kannada or broken English into flue
 - **Voice Input**: Speak in Kannada using Web Speech API
 - **Smart Language Detection**: Automatically detects Kannada vs English text
 - **Translation**: Uses Google Translate for Kannada to English translation
-- **Grammar Correction**: Uses OpenAI GPT-4o to improve English fluency and grammar
+- **Grammar Correction**: Uses Cohere's API to improve English fluency and grammar
 - **Copy to Clipboard**: Easy copying of results
 - **Responsive Design**: Elder-friendly interface with large buttons and clear fonts
 - **Real-time Processing**: Live translation and correction
