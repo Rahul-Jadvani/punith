@@ -12,9 +12,9 @@ class TranslatorApp {
 
     getBackendUrl() {
         // For development, use localhost
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return 'http://localhost:5000';
-        }
+        // if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        //     return 'http://localhost:5000';
+        // }
         // For production, use deployed Render backend
         return 'https://amma-backend-5z2j.onrender.com';
     }
