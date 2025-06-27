@@ -16,7 +16,7 @@ class TranslatorApp {
         //     return 'http://localhost:5000';
         // }
         // For production, use deployed Render backend
-        return 'https://amma-backend-5z2j.onrender.com';
+        return 'https://translator-0mtu.onrender.com';
     }
 
     initializeElements() {
